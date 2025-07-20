@@ -102,8 +102,8 @@ Launch the application using `npm start`. This will:
 
 ### 5. Drawing Controls
 Once connected, you'll see drawing tools at the top of the screen:
-- **Offset**: Vertical spacing from the top (default: 12)
-- **Inset**: Horizontal padding on sides (default: 1)
+- **Offset**: Vertical spacing from the top (default: 0)
+- **Inset**: Horizontal padding on sides (default: 0)
 - **Clear** (⊗): Clear all drawings
 - **Undo** (⟲): Undo last stroke
 - **Color options**: White, black, red, green, blue, yellow, or custom color picker
