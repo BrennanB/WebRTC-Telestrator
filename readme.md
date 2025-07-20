@@ -1,17 +1,30 @@
 # WebRTC-Telestrator
 
-A remote telestrator app using WebRTC. Use a remote device (such as a phone or tablet) to draw on your screen while recording/streaming via OBS. Rather than just having a blank 'greenscreen' to draw on, this app streams a specified display so that you can see exactly where you are drawing on your device.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/Node.js-12+-green.svg)](https://nodejs.org/)
 
-> **Note**: This project is a revamped and re-written version of the original [WebRTC-Telestrator by BlankSourceCode](https://github.com/BlankSourceCode/WebRTC-Telestrator). It includes bug fixes, improved connection handling, and enhanced UI controls.
+Real-time collaborative drawing tool for content creators. Features Apple Pencil optimization, WebRTC synchronization, OBS integration, and responsive touch controls for seamless telestration during live streams and recordings.
 
-## Key Features
+Use a remote device (iPad, phone, or tablet) to draw on your screen while recording/streaming via OBS. Rather than just having a blank 'greenscreen' to draw on, this app streams your actual display so you can see exactly where you're drawing in real-time.
 
-- **WebRTC-based streaming**: Real-time, low-latency screen sharing
-- **Remote drawing capabilities**: Draw on any device and see it appear on the host
-- **OBS integration**: Transparent overlay support for streaming/recording
-- **Improved connection handling**: Fixed issues with reconnection after page refresh
-- **Enhanced UI controls**: Adjustable offset and inset values for canvas positioning
-- **Cross-platform support**: Works on Windows, Android, and iOS devices
+> **Note**: This project is a revamped and re-written version of the original [WebRTC-Telestrator by BlankSourceCode](https://github.com/BlankSourceCode/WebRTC-Telestrator). It includes major performance improvements, Apple Pencil support, and enhanced UI controls.
+
+## 🎥 Demo
+
+![WebRTC Telestrator Demo](WebRTC-Telestrator.gif)
+
+*Real-time drawing with Apple Pencil support and OBS integration*
+
+## ✨ Features
+
+- 🖊️ **Apple Pencil Support** - Optimized for iPad with hover preview and sub-10ms latency
+- 🎬 **OBS Integration** - Transparent overlay for streaming/recording with MJPEG output
+- 🌐 **WebRTC Connection** - Low-latency real-time synchronization between devices
+- 📱 **Cross-Platform** - Works on iPad, desktop, and mobile browsers
+- 🎨 **Drawing Tools** - Multiple colors, adjustable brush sizes, undo/clear functions
+- ⚡ **Performance Optimized** - 120Hz support, reduced input lag, and smooth drawing
+- 🔄 **Reliable Connections** - Fixed reconnection issues and improved stability
+- 🎯 **Precision Controls** - Adjustable canvas positioning and responsive toolbar
 
 ## Prerequisites
 
@@ -19,20 +32,31 @@ A remote telestrator app using WebRTC. Use a remote device (such as a phone or t
 - OBS Studio (for streaming/recording)
 - A WebRTC-compatible browser (Chrome, Edge, Firefox, Safari)
 
-## Installation
+## 🚀 Quick Start
 
-1. Clone this repository:
+```bash
+git clone https://github.com/BrennanB/WebRTC-Telestrator.git
+cd WebRTC-Telestrator
+npm install
+npm start
+```
+
+Open http://localhost:8888 and start drawing!
+
+## 📦 Installation
+
+1. **Clone this repository:**
    ```bash
    git clone https://github.com/BrennanB/WebRTC-Telestrator.git
    cd WebRTC-Telestrator
    ```
 
-2. Install dependencies:
+2. **Install dependencies:**
    ```bash
    npm install
    ```
 
-3. Start the application:
+3. **Start the application:**
    ```bash
    npm start
    ```
@@ -41,6 +65,8 @@ A remote telestrator app using WebRTC. Use a remote device (such as a phone or t
    ```bash
    npm start -- -p 9999
    ```
+
+The server will start on port 8888 (HTTP) and 8889 (WebSocket) by default.
 
 ## Usage
 
@@ -125,15 +151,36 @@ Once connected, you'll see drawing tools at the top of the screen:
    - Press `F5` to start debugging
    - The debugger will attach to the Node.js process
 
-## Contributing
+## 🛠️ Tech Stack
+
+- **Frontend**: Vanilla JavaScript, Canvas API, Pointer Events
+- **Backend**: Node.js, Express, WebSocket (ws)
+- **Real-time Communication**: WebRTC Data Channels
+- **Streaming**: MJPEG for OBS integration
+- **UI**: Modern CSS with backdrop-filter and flexbox
+- **Performance**: Desynchronized canvas context, touch event optimization
+
+## 🤝 Contributing
 
 Feel free to submit issues and pull requests. This project aims to provide a simple, reliable telestrator solution for content creators.
+
+### Development Workflow
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/new-feature`
+3. Make your changes and test thoroughly
+4. Commit with clear messages: `git commit -m "Add new feature"`
+5. Push and create a pull request
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
-- Original concept and implementation by [BlankSourceCode](https://github.com/BlankSourceCode/WebRTC-Telestrator)
-- Rewritten with improved connection handling and UI enhancements
+- **Original concept and implementation** by [BlankSourceCode](https://github.com/BlankSourceCode/WebRTC-Telestrator)
+- **Major rewrite** with Apple Pencil support, performance optimizations, and enhanced UI
+- **Community feedback** for feature requests and bug reports
+
+---
+
+Made with ❤️ for content creators and live streamers
