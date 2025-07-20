@@ -6,6 +6,7 @@
     "author": "BlankSourceCode",
     "license": "MIT",
     "scripts": {
+        "start": "node src/server.js",
         "package": "pkg package.json"
     },
     "bin": "src/server.js",
