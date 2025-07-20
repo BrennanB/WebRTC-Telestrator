@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WebRTC-Telestrator</title>
     <link rel="stylesheet" media="screen" href="css/main.css">
     <script src="scripts/drawingControls.js"></script>
@@ -21,24 +22,90 @@
         <div id="canvasContainer">
             <canvas id="canvas"></canvas>
         </div>
+        <button id="showTools" title="Show toolbar" class="show-tools-button hide">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 15l6-6 6 6"/>
+            </svg>
+        </button>
         <div id="tools">
-            <label for="offset">Offset:</label>
-            <input id="offset" type="number" value="12" />
-            <label for="inset">Inset:</label>
-            <input id="inset" type="number" value="1" />
-            <button id="clear" title="clear">&#8855;</button>
-            <button id="undo" title="undo">&#10226;</button>
+            <div class="tool-group">
+                <div class="tool-item">
+                    <label for="offset">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5v14"/>
+                        </svg>
+                        Offset
+                    </label>
+                    <input id="offset" type="number" value="0" title="Vertical spacing from top" />
+                </div>
+                <div class="tool-item">
+                    <label for="inset">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 3v18M15 3v18M3 12h18"/>
+                        </svg>
+                        Inset
+                    </label>
+                    <input id="inset" type="number" value="0" title="Horizontal padding" />
+                </div>
+            </div>
 
-            <div class="colorOption" style="background:white"></div>
-            <div class="colorOption" style="background:black"></div>
-            <div class="colorOption" style="background:red"></div>
-            <div class="colorOption" style="background:green"></div>
-            <div class="colorOption" style="background:blue"></div>
-            <div class="colorOption" style="background:yellow"></div>
-            <input id="colorPicker" type="color" placeholder="colors" />
-            <input id="lineWidth" type="range" min="0" max="10" step="1" />
-            <button id="toggleTools" title="toggle tools">&#8682;</button>
-            <button id="fullscreen" title="fullscreen">&#8689;</button>
+            <div class="tool-separator"></div>
+
+            <div class="tool-group">
+                <button id="clear" title="Clear canvas" class="tool-button">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14zM10 11v6M14 11v6"/>
+                    </svg>
+                </button>
+                <button id="undo" title="Undo last stroke" class="tool-button">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 7v6h6M21 17a9 9 0 00-9-9 9 9 0 00-6.219 2.464L3 13"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="tool-separator"></div>
+
+            <div class="tool-group color-group">
+                <span class="tool-label">Colors:</span>
+                <div class="colorOption" style="background:white" title="White"></div>
+                <div class="colorOption" style="background:black" title="Black"></div>
+                <div class="colorOption" style="background:red" title="Red"></div>
+                <div class="colorOption" style="background:green" title="Green"></div>
+                <div class="colorOption" style="background:blue" title="Blue"></div>
+                <div class="colorOption" style="background:yellow" title="Yellow"></div>
+                <input id="colorPicker" type="color" title="Custom color" />
+            </div>
+
+            <div class="tool-separator"></div>
+
+            <div class="tool-group">
+                <label for="lineWidth" class="tool-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 6h16M4 12h16M4 18h16" stroke-width="1"/>
+                        <path d="M4 9h16" stroke-width="2"/>
+                        <path d="M4 15h16" stroke-width="3"/>
+                    </svg>
+                    Brush:
+                </label>
+                <input id="lineWidth" type="range" min="0" max="10" step="1" value="1" title="Brush size" />
+                <span id="lineWidthValue" class="tool-value">1</span>
+            </div>
+
+            <div class="tool-spacer"></div>
+
+            <div class="tool-group">
+                <button id="toggleTools" title="Toggle toolbar" class="tool-button">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 9l6 6 6-6"/>
+                    </svg>
+                </button>
+                <button id="fullscreen" title="Toggle fullscreen" class="tool-button">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/>
+                    </svg>
+                </button>
+            </div>
         </div>
     </div>
 </body>

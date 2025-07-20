@@ -20,8 +20,8 @@ class DrawingControls {
     #lineWidth = 1;
     #isDrawing = false;
     #hasCanvasChanged = false;
-    #offset = 20;
-    #inset = 1;
+    #offset = 0;
+    #inset = 0;
     #frameTimeout = null;
 
     /**
@@ -62,7 +62,14 @@ class DrawingControls {
         }
         const lineWidthControl = document.getElementById("lineWidth");
         lineWidthControl.addEventListener("change", (e) => this.#onLineWidthChange(e));
+        lineWidthControl.addEventListener("input", (e) => this.#onLineWidthChange(e));
         lineWidthControl.value = this.#lineWidth;
+        
+        // Update the line width value display
+        const lineWidthValue = document.getElementById("lineWidthValue");
+        if (lineWidthValue) {
+            lineWidthValue.textContent = this.#lineWidth;
+        }
 
         const lineColor = localStorage.getItem("lineColor");
         if (typeof lineColor === "string") {
@@ -78,6 +85,7 @@ class DrawingControls {
         // Listen to drawing action events
         document.getElementById("fullscreen").addEventListener("click", (e) => this.#onToggleFullScreen(e));
         document.getElementById("toggleTools").addEventListener("click", (e) => this.#onToggleTools(e));
+        document.getElementById("showTools").addEventListener("click", (e) => this.#onShowTools(e));
         document.getElementById("undo").addEventListener("click", (e) => this.#onUndo(e));
         document.getElementById("clear").addEventListener("click", (e) => this.#onClear(e));
 
@@ -280,23 +288,19 @@ class DrawingControls {
 
     #onToggleTools(e) {
         const button = document.getElementById("toggleTools");
-        if (!button.classList.contains("flip")) {
-            const tools = document.querySelectorAll("#tools > *");
-            tools.forEach((element) => {
-                if (element.id !== "toggleTools") {
-                    element.classList.add("hide");
-                }
-            });
-            button.classList.add("flip");
-        } else {
-            const tools = document.querySelectorAll("#tools > *");
-            tools.forEach((element) => {
-                if (element.id !== "toggleTools") {
-                    element.classList.remove("hide");
-                }
-            });
-            button.classList.remove("flip");
-        }
+        const showButton = document.getElementById("showTools");
+        const toolbar = document.getElementById("tools");
+        
+        toolbar.classList.add("hide");
+        showButton.classList.remove("hide");
+    }
+    
+    #onShowTools(e) {
+        const showButton = document.getElementById("showTools");
+        const toolbar = document.getElementById("tools");
+        
+        toolbar.classList.remove("hide");
+        showButton.classList.add("hide");
     }
 
     #onOffsetChange(e) {
@@ -328,6 +332,12 @@ class DrawingControls {
     #onLineWidthChange(e) {
         this.#lineWidth = parseInt(e.target.value);
         localStorage.setItem("lineWidth", this.#lineWidth);
+        
+        // Update the line width value display
+        const lineWidthValue = document.getElementById("lineWidthValue");
+        if (lineWidthValue) {
+            lineWidthValue.textContent = this.#lineWidth;
+        }
     }
 
     #onLineColorChange(color) {
@@ -335,7 +345,7 @@ class DrawingControls {
         localStorage.setItem("lineColor", this.#lineColor);
 
         let found = false;
-        const tools = document.querySelectorAll("#tools > .colorOption");
+        const tools = document.querySelectorAll("#tools .colorOption");
         tools.forEach((element) => {
             element.classList.remove("selected");
             if (element.style.backgroundColor === color) {
