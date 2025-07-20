@@ -14,6 +14,12 @@
 <body>
     <div id="connection">
         <div id="title">WebRTC-Telestrator</div>
+        <div id="apple-pencil-notice" class="notice">
+            <strong>For optimal Apple Pencil performance:</strong><br>
+            • Disable Scribble: Settings → Apple Pencil → Turn off "Scribble"<br>
+            • Safari: Settings → Safari → Disable "Prefer Page Rendering Updates near 60fps"<br>
+            • Turn off Low Power Mode
+        </div>
         <button id="hostButton">Host Session</button>
         <button id="joinButton">Join</button>
     </div>
@@ -21,6 +27,7 @@
     <div id="drawing" class="hide">
         <div id="canvasContainer">
             <canvas id="canvas"></canvas>
+            <div id="pencil-cursor" class="hide"></div>
         </div>
         <button id="showTools" title="Show toolbar" class="show-tools-button hide">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

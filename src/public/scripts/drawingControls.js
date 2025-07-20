@@ -23,21 +23,69 @@ class DrawingControls {
     #offset = 0;
     #inset = 0;
     #frameTimeout = null;
+    #currentPath = null;
+    #pencilCursor = null;
 
     /**
      * Create an instance of the drawing controls
      * @param {boolean} isDebugMode 
      */
     constructor(isDebugMode) {
-        // Create the canvas context
+        // Create the canvas context with desynchronized option for lower latency
         this.#canvas = document.getElementById("canvas");
-        this.#context = this.#canvas.getContext("2d", { willReadFrequently: true });
+        this.#context = this.#canvas.getContext("2d", { 
+            willReadFrequently: true,
+            desynchronized: true 
+        });
+        
+        // Get the pencil cursor element
+        this.#pencilCursor = document.getElementById("pencil-cursor");
 
         // Listen to pointer events for drawing
         this.#canvas.addEventListener("pointerdown", (e) => this.#onStart(e));
-        this.#canvas.addEventListener("pointermove", (e) => this.#onMove(e));
+        this.#canvas.addEventListener("pointermove", (e) => this.#onMove(e), { passive: false });
         this.#canvas.addEventListener("pointerup", (e) => this.#onStop(e));
         this.#canvas.addEventListener("pointerout", (e) => this.#onStop(e));
+        this.#canvas.addEventListener("pointercancel", (e) => this.#onStop(e));
+        this.#canvas.addEventListener("pointerleave", (e) => this.#onStop(e));
+        
+        // Add hover events for Apple Pencil cursor
+        this.#canvas.addEventListener("pointerenter", (e) => this.#onPointerHover(e));
+        this.#canvas.addEventListener("pointermove", (e) => this.#onPointerHover(e), { passive: true });
+        this.#canvas.addEventListener("pointerleave", (e) => this.#onPointerLeave(e));
+        
+        // Add touch events as fallback for Apple Pencil on Safari
+        this.#canvas.addEventListener("touchstart", (e) => {
+            // Convert touch to pointer-like event for Apple Pencil
+            if (e.touches.length === 1) {
+                const touch = e.touches[0];
+                const pointerEvent = this.#touchToPointer(touch, e, "pen");
+                this.#onStart(pointerEvent);
+            }
+        }, { passive: false });
+        
+        this.#canvas.addEventListener("touchmove", (e) => {
+            if (e.touches.length === 1) {
+                const touch = e.touches[0];
+                const pointerEvent = this.#touchToPointer(touch, e, "pen");
+                this.#onMove(pointerEvent);
+            }
+        }, { passive: false });
+        
+        this.#canvas.addEventListener("touchend", (e) => {
+            if (e.changedTouches.length === 1) {
+                const touch = e.changedTouches[0];
+                const pointerEvent = this.#touchToPointer(touch, e, "pen");
+                this.#onStop(pointerEvent);
+            }
+        }, { passive: false });
+        
+        // Also listen on document level to catch pointer releases outside canvas
+        document.addEventListener("pointerup", (e) => {
+            if (this.#firstPointer && e.pointerId === this.#firstPointer.pointerId) {
+                this.#onStop(e);
+            }
+        });
 
         // Load settings
         const loadedOffset = localStorage.getItem("offset");
@@ -150,8 +198,13 @@ class DrawingControls {
     }
 
     #sendData(payload, useDoubleBuffer) {
-        // Update the data flag after the canvas has rendered one frame
-        if (!this.#frameTimeout && this.#webSocket) {
+        // Send WebRTC data immediately for responsiveness
+        if (this.#dataChannel && payload) {
+            this.#dataChannel.send(JSON.stringify(payload));
+        }
+        
+        // For WebSocket (OBS), only send image data occasionally
+        if (this.#webSocket && !this.#frameTimeout) {
             this.#frameTimeout = setTimeout(() => {
                 const data = this.#canvas.toDataURL("image/png");
                 this.#webSocket.send(data);
@@ -161,25 +214,47 @@ class DrawingControls {
                 }
 
                 this.#frameTimeout = null;
-            }, 10);
-        }
-
-        if (this.#dataChannel && payload) {
-            this.#dataChannel.send(JSON.stringify(payload));
+            }, useDoubleBuffer ? 0 : 33); // 30fps for OBS
         }
     }
 
     #onStart(e) {
-        if (this.#firstPointer) {
+        // For Apple Pencil (pen type), always allow immediate drawing
+        const isPen = e.pointerType === "pen";
+        
+        // Always clear any existing drawing state when starting a new stroke
+        if (this.#isDrawing) {
+            // Force complete the previous stroke
+            this.#context.stroke();
+            this.#context.closePath();
+            this.#isDrawing = false;
+            
+            // For Apple Pencil, immediately clear the pointer
+            if (isPen) {
+                this.#firstPointer = null;
+            }
+        }
+
+        // If we have a pointer and it's different, ignore it (multi-touch prevention)
+        // But always allow pen input
+        if (this.#firstPointer && this.#firstPointer.pointerId !== e.pointerId && !isPen) {
             e.preventDefault();
             return false;
         }
 
+        // Start new stroke
         this.#firstPointer = e;
         const x = this.#getX(e);
         const y = this.#getY(e);
 
         this.#isDrawing = true;
+        this.#currentPath = { x, y };
+        
+        // Hide cursor when drawing starts
+        if (isPen && this.#pencilCursor) {
+            this.#pencilCursor.classList.add("hide");
+        }
+        
         this.#context.beginPath();
         this.#context.moveTo(x, y);
 
@@ -199,22 +274,41 @@ class DrawingControls {
         }
 
         if (this.#isDrawing) {
-            const x = this.#getX(e);
-            const y = this.#getY(e);
-            this.#context.lineTo(x, y);
+            // Use coalesced events for Apple Pencil but draw immediately
+            const events = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+            
             this.#context.strokeStyle = this.#lineColor;
             this.#context.lineWidth = this.#lineWidth * 5 + 1;
             this.#context.lineCap = "round";
             this.#context.lineJoin = "round";
+            
+            // Draw all coalesced points immediately
+            this.#context.beginPath();
+            this.#context.moveTo(this.#currentPath.x, this.#currentPath.y);
+            
+            for (const event of events) {
+                const x = this.#getX(event);
+                const y = this.#getY(event);
+                this.#context.lineTo(x, y);
+                this.#currentPath = { x, y };
+            }
+            
             this.#context.stroke();
-
-            this.#sendData({
-                action: "move",
-                x,
-                y,
-                strokeStyle: this.#lineColor,
-                lineWidth: this.#lineWidth
-            });
+            
+            // Send last point immediately for responsive drawing
+            if (events.length > 0) {
+                const lastEvent = events[events.length - 1];
+                const lastX = this.#getX(lastEvent);
+                const lastY = this.#getY(lastEvent);
+                
+                this.#sendData({
+                    action: "move",
+                    x: lastX,
+                    y: lastY,
+                    strokeStyle: this.#lineColor,
+                    lineWidth: this.#lineWidth
+                });
+            }
         }
 
         e.preventDefault();
@@ -222,15 +316,23 @@ class DrawingControls {
     }
 
     #onStop(e) {
+        // Only process stop for the pointer we're tracking
         if (this.#firstPointer && e.pointerId !== this.#firstPointer.pointerId) {
             return false;
         }
 
-        this.#firstPointer = null;
+        // Always clear pointer tracking for the stopped pointer
+        if (!this.#firstPointer || e.pointerId === this.#firstPointer.pointerId) {
+            this.#firstPointer = null;
+        }
+
         if (this.#isDrawing) {
             this.#context.stroke();
             this.#context.closePath();
             this.#isDrawing = false;
+            this.#currentPath = null;
+            
+            // The cursor will automatically reappear on next hover since isDrawing is now false
 
             this.#undoStack.push(this.#context.getImageData(0, 0, this.#canvas.width, this.#canvas.height));
             this.#undoIndex++;
@@ -338,6 +440,13 @@ class DrawingControls {
         if (lineWidthValue) {
             lineWidthValue.textContent = this.#lineWidth;
         }
+        
+        // Update cursor size if it's currently visible
+        if (this.#pencilCursor && !this.#pencilCursor.classList.contains("hide")) {
+            const brushSize = (this.#lineWidth * 5 + 1);
+            this.#pencilCursor.style.width = brushSize + "px";
+            this.#pencilCursor.style.height = brushSize + "px";
+        }
     }
 
     #onLineColorChange(color) {
@@ -410,5 +519,43 @@ class DrawingControls {
     #getY(e) {
         let y = e.clientY - this.#canvasRect.top;
         return y / this.#scale.y;
+    }
+    
+    #touchToPointer(touch, originalEvent, pointerType = "pen") {
+        return {
+            pointerId: touch.identifier || 1,
+            pointerType: pointerType,
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+            pageX: touch.pageX,
+            pageY: touch.pageY,
+            pressure: touch.force || 0.5,
+            preventDefault: () => originalEvent.preventDefault(),
+            // Add getCoalescedEvents stub for touch events
+            getCoalescedEvents: () => [this.#touchToPointer(touch, originalEvent, pointerType)]
+        };
+    }
+    
+    #onPointerHover(e) {
+        // Only show cursor for pen/stylus input (Apple Pencil) and when NOT drawing
+        if (e.pointerType === "pen" && this.#pencilCursor && !this.#isDrawing) {
+            this.#pencilCursor.classList.remove("hide");
+            
+            // Position cursor exactly where the pointer is
+            this.#pencilCursor.style.left = e.clientX + "px";
+            this.#pencilCursor.style.top = e.clientY + "px";
+            
+            // Size cursor to match brush size
+            const brushSize = (this.#lineWidth * 5 + 1);
+            this.#pencilCursor.style.width = brushSize + "px";
+            this.#pencilCursor.style.height = brushSize + "px";
+        }
+    }
+    
+    #onPointerLeave(e) {
+        // Hide cursor when pointer leaves canvas
+        if (e.pointerType === "pen" && this.#pencilCursor) {
+            this.#pencilCursor.classList.add("hide");
+        }
     }
 }
